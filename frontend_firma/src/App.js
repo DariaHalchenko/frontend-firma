@@ -1,25 +1,34 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
+import AdminPage from "./pages/AdminPage";
+import TootajaPage from "./pages/TootajaPage";
+import ProtectedRoute from "./auth/ProtectedRoute";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute role="Admin">
+              <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tootaja"
+          element={
+            <ProtectedRoute role="Töötaja">
+              <TootajaPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<h2>404: Lehte ei leitud</h2>} />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
 export default App;
