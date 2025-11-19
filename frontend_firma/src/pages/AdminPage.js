@@ -27,7 +27,6 @@ export default function AdminPage() {
     "Juuli", "August", "September", "Oktoober", "November", "Detsember"
   ];
 
-  // Загрузка списка сотрудников с фильтром и сортировкой
   const loadAll = async () => {
     let query = "/api/admin/AdminTootajate?";
     if (nimiOtsing) query += `nimi=${encodeURIComponent(nimiOtsing)}&`;
@@ -89,7 +88,7 @@ export default function AdminPage() {
 
   // Palkade aruanne kuupõhiselt
   const [salaryYear, setSalaryYear] = useState(new Date().getFullYear());
-  const [salaryMonth, setSalaryMonth] = useState(new Date().getMonth() + 1); // JS месяцы с 0
+  const [salaryMonth, setSalaryMonth] = useState(new Date().getMonth() + 1); 
 
   const loadMonthlySalaryReport = async () => {
     if (!salaryMonth || !salaryYear) return alert("Vali kuu ja aasta");
@@ -98,7 +97,7 @@ export default function AdminPage() {
       `/api/admin/AdminTootajate/aruanne/palk?aasta=${salaryYear}&kuu=${salaryMonth}`
     );
 
-    if (!data || !data.andmed) return; // защита от ошибок
+    if (!data || !data.andmed) return; 
 
     setSalaryReport(
       data.andmed.map(r => ({
@@ -205,7 +204,7 @@ export default function AdminPage() {
             </thead>
             <tbody>
               {dailyReport
-                .filter(r => r.nimi.toLowerCase() !== "admin") // исключаем admin
+                .filter(r => r.nimi.toLowerCase() !== "admin") 
                 .map((r, i) => (
                   <tr key={i} style={tr}>
                     <td style={td}>{r.nimi}</td>
@@ -219,7 +218,6 @@ export default function AdminPage() {
           </table>
         </section>
       )}
-
 
       {/* Kuupõhine palk */}
       {salaryReport.length > 0 && (
@@ -262,73 +260,99 @@ export default function AdminPage() {
         </div>
         <button style={btnMain} onClick={lisaTootaja}>Lisa töötaja</button>
       </section>
-      {salaryReport.length > 0 && (
-        <section style={section}>
-          <h2 style={sectionTitle}>Kõigi töötajate palga aruanne</h2>
-          <table style={table}>
-            <thead>
-              <tr style={theadRow}>
-                <th style={th}>Nimi</th>
-                <th style={th}>Tunnitasu</th>
-                <th style={th}>Palk (€)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {salaryReport.map((r) => (
-                <tr key={r.nimi} style={tr}>
-                  <td style={td}>{r.nimi}</td>
-                  <td style={td}>{r.tunnitasu}</td>
-                  <td style={td}>{r.palk}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-      )}
-      {dailyReport.length > 0 && (
-        <section style={section}>
-          <h2 style={sectionTitle}>Päeva aruanne</h2>
-          <table style={table}>
-            <thead>
-              <tr style={theadRow}>
-                <th style={th}>Nimi</th>
-                <th style={th}>Kuupäev</th>
-                <th style={th}>Sisse</th>
-                <th style={th}>Välja</th>
-                <th style={th}>Palk (€)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dailyReport.map((r, i) => (
-                <tr key={i} style={tr}>
-                  <td style={td}>{r.nimi}</td>
-                  <td style={td}>{r.kuupaev}</td>
-                  <td style={td}>{r.sissepaas}</td>
-                  <td style={td}>{r.valjapaas}</td>
-                  <td style={td}>{r.palk}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-      )}
     </div>
   );
 }
 
-const page = { padding: "20px", fontFamily: "Arial, sans-serif", background: "#f8f8f8" };
-const title = { textAlign: "center", marginBottom: "30px" };
-const topCard = { display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "20px", padding: "15px", background: "#fff", borderRadius: "8px", boxShadow: "0 2px 5px rgba(0,0,0,0.1)" };
-const topItem = { display: "flex", alignItems: "center", gap: "5px" };
-const section = { background: "white", padding: "20px", marginBottom: "30px", borderRadius: "8px", boxShadow: "0 2px 5px rgba(0,0,0,0.1)" };
-const sectionTitle = { marginBottom: "15px" };
-const table = { width: "100%", borderCollapse: "collapse", boxShadow: "0 2px 5px rgba(0,0,0,0.1)" };
-const theadRow = { background: "#4CAF50", color: "white" };
-const th = { padding: "10px", border: "1px solid #ddd", textAlign: "center" };
-const tr = { background: "#fff", borderBottom: "1px solid #ddd" };
-const td = { padding: "8px", border: "1px solid #ddd", textAlign: "center" };
-const btnMain = { padding: "8px 16px", background: "#4CAF50", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" };
-const btnEdit = { padding: "5px 10px", background: "#ffa500", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" };
-const btnDelete = { padding: "5px 10px", background: "#e53935", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" };
-const input = { padding: "8px", borderRadius: "4px", border: "1px solid #ccc" };
-const formGrid = { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "10px" };
+const page = { 
+  padding: "20px", 
+  fontFamily: "Arial, sans-serif", 
+  background: "#f8f8f8" 
+};
+const title = { 
+  textAlign: "center", 
+  marginBottom: "30px" 
+};
+const topCard = {
+  display: "flex", 
+  flexWrap: "wrap", 
+  gap: "10px", 
+  marginBottom: "20px", 
+  padding: "15px", 
+  background: "#fff", 
+  borderRadius: "8px",
+  boxShadow: "0 2px 5px rgba(0,0,0,0.1)" 
+};
+const topItem = { 
+  display: "flex", 
+  alignItems: "center", 
+  gap: "5px" 
+};
+const section = { 
+  background: "white", 
+  padding: "20px", 
+  marginBottom: "30px", 
+  borderRadius: "8px", 
+  boxShadow: "0 2px 5px rgba(0,0,0,0.1)" 
+};
+const sectionTitle = { 
+  marginBottom: "15px" 
+};
+const table = { 
+  width: "100%", 
+  borderCollapse: "collapse", 
+  boxShadow: "0 2px 5px rgba(0,0,0,0.1)" 
+};
+const theadRow = { 
+  background: "#4CAF50", 
+  color: "white" 
+};
+const th = { 
+  padding: "10px", 
+  border: "1px solid #ddd", 
+  textAlign: "center" 
+};
+const tr = { 
+  background: "#fff", 
+  borderBottom: "1px solid #ddd" 
+};
+const td = { 
+  padding: "8px", 
+  border: "1px solid #ddd", 
+  textAlign: "center" 
+};
+const btnMain = { 
+  padding: "8px 16px", 
+  background: "#4CAF50", 
+  color: "white", 
+  border: "none", 
+  borderRadius: "4px", 
+  cursor: "pointer" 
+};
+const btnEdit = { 
+  padding: "5px 10px", 
+  background: "#ffa500", 
+  color: "white", 
+  border: "none", 
+  borderRadius: "4px", 
+  cursor: "pointer" 
+};
+const btnDelete = { 
+  padding: "5px 10px", 
+  background: "#e53935", 
+  color: "white", 
+  border: "none", 
+  borderRadius: "4px", 
+  cursor: "pointer" 
+};
+const input = { 
+  padding: "8px", 
+  borderRadius: "4px", 
+  border: "1px solid #ccc" 
+};
+const formGrid = { 
+  display: "grid", 
+  gridTemplateColumns: "repeat(3, 1fr)", 
+  gap: "10px", 
+  marginBottom: "10px" 
+};
