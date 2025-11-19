@@ -23,27 +23,58 @@ export default function TootajaPage() {
       console.error(err);
     }
   };
+  
+  // Uuenda Valjapaas (väljalogimise aeg)
+  const updateValjapaas = async (kuupaev) => {
+  let uusValjapaas = prompt("Sisesta väljapääsu aeg (HH:mm):");
+  if (!uusValjapaas) return;
 
-    // Kasutaja tööaja laadimine
-    const loadWorktimes = async () => {
+  // добавляем секунды, если их нет
+  if (!uusValjapaas.includes(":")) return alert("Vale formaat!");
+  if (uusValjapaas.split(":").length === 2) {
+      uusValjapaas = uusValjapaas + ":00";
+  }
+
+  const kuupaevISO = kuupaev.split('.').reverse().join('-'); // формат yyyy-MM-dd
+
+  try {
+    await apiPut(
+      `/api/Worktime/valjapaas/${name}/${kuupaevISO}`,
+      JSON.stringify({ Valjapaas: uusValjapaas }) // <-- объект DTO
+    );
+    alert("Väljalogimise aeg uuendatud!");
+    loadWorktimes();
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
+
+
+
+
+
+
+  // Kasutaja tööaja laadimine
+  const loadWorktimes = async () => {
     try {
-        const data = await apiGet(`/api/Worktime/tootaja/${name}`);
-        
-        // Muundame kuupäevad ja kellaajad kuvamiseks
-        const formattedWorktimes = data?.worktimes?.map(w => ({
+      const data = await apiGet(`/api/Worktime/tootaja/${name}`);
+
+      // Muundame kuupäevad ja kellaajad kuvamiseks ning säilitame ISO kuupäeva edasiseks kasutamiseks
+      const formattedWorktimes = data?.worktimes?.map(w => ({
+        RawKuupaev: w.kuupaev,  // ISO kuupäev, mida kasutada API päringutes
         Kuupaev: w.kuupaev ? new Date(w.kuupaev).toLocaleDateString() : "-",
-        Sissepaas: w.sissepaas ? w.sissepaas.slice(0,5) : "-",
-        Valjapaas: w.valjapaas ? w.valjapaas.slice(0,5) : "-",
+        Sissepaas: w.sissepaas ? w.sissepaas.slice(0, 5) : "-",
+        Valjapaas: w.valjapaas ? w.valjapaas.slice(0, 5) : "Pole",
         Palk: w.palk != null ? Number(w.palk) : 0
-        })) || [];
+      })) || [];
 
-        setWorktimes(formattedWorktimes);
+      setWorktimes(formattedWorktimes);
     } catch (err) {
-        console.error(err);
-        setWorktimes([]);
+      console.error(err);
+      setWorktimes([]);
     }
-    };
-
+  };
 
   // Kasutaja andmete uuendamine (ainult nimi ja e-post)
   const updateUserData = async () => {
@@ -59,11 +90,24 @@ export default function TootajaPage() {
   // Tööaja lisamine
   const addWorktime = async () => {
     try {
-      if (!newWorktime.Kuupaev || !newWorktime.Sissepaas || !newWorktime.Valjapaas) {
-        alert("Täida kõik väljad");
+      if (!newWorktime.Kuupaev || !newWorktime.Sissepaas) {
+        alert("Täida kõik kohustuslikud väljad (kuupäev ja sissepääs)");
         return;
       }
-      await apiPost(`/api/Worktime/tootaja/lisada/${name}`, newWorktime);
+
+      // Kui väljal Valjapaas on tühi string või "Pole", siis saadame null
+      const valjapaasForSend = !newWorktime.Valjapaas || newWorktime.Valjapaas.toLowerCase() === "pole"
+        ? null
+        : newWorktime.Valjapaas;
+
+      // Kuupäeva väärtus peab olema ISO formaadis 'YYYY-MM-DD', kuna input type="date" annab selle formaadi
+      const worktimeToSend = {
+        Kuupaev: newWorktime.Kuupaev,
+        Sissepaas: newWorktime.Sissepaas,
+        Valjapaas: valjapaasForSend
+      };
+
+      await apiPost(`/api/Worktime/tootaja/lisada/${name}`, worktimeToSend);
       alert("Tööaeg lisatud!");
       setNewWorktime({ Kuupaev: "", Sissepaas: "", Valjapaas: "" });
       loadWorktimes();
@@ -74,10 +118,11 @@ export default function TootajaPage() {
 
   return (
     <div style={page}>
-        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h1 style={title}>Tere, {userData.nimi}! Minu andmed ja tööajad</h1>
-             <LogoutButton />
-        </header>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1 style={title}>Tere, {userData.nimi}! Minu andmed ja tööajad</h1>
+        <LogoutButton />
+      </header>
+
       {/* === Minu andmed === */}
       <section style={section}>
         <h2 style={sectionTitle}>Minu andmed</h2>
@@ -89,27 +134,9 @@ export default function TootajaPage() {
             value={userData.nimi}
             onChange={(e) => setUserData({ ...userData, nimi: e.target.value })}
           />
-          <input
-            style={input}
-            type="text"
-            placeholder="Isikukood"
-            value={userData.isikukood}
-            disabled
-          />
-          <input
-            style={input}
-            type="text"
-            placeholder="Amet"
-            value={userData.amet}
-            disabled
-          />
-          <input
-            style={input}
-            type="number"
-            placeholder="Tunnitasu"
-            value={userData.tunnitasu}
-            disabled
-          />
+          <input style={input} type="text" placeholder="Isikukood" value={userData.isikukood} disabled />
+          <input style={input} type="text" placeholder="Amet" value={userData.amet} disabled />
+          <input style={input} type="number" placeholder="Tunnitasu" value={userData.tunnitasu} disabled />
           <input
             style={input}
             type="email"
@@ -118,7 +145,9 @@ export default function TootajaPage() {
             onChange={(e) => setUserData({ ...userData, email: e.target.value })}
           />
         </div>
-        <button style={btnMain} onClick={updateUserData}>Salvesta</button>
+        <button style={btnMain} onClick={updateUserData}>
+          Salvesta
+        </button>
       </section>
 
       {/* === Lisa tööaeg === */}
@@ -144,7 +173,9 @@ export default function TootajaPage() {
             onChange={(e) => setNewWorktime({ ...newWorktime, Valjapaas: e.target.value })}
           />
         </div>
-        <button style={btnMain} onClick={addWorktime}>Lisa</button>
+        <button style={btnMain} onClick={addWorktime}>
+          Lisa
+        </button>
       </section>
 
       {/* === Minu tööajad таблица === */}
@@ -157,6 +188,7 @@ export default function TootajaPage() {
               <th style={th}>Sisse</th>
               <th style={th}>Välja</th>
               <th style={th}>Palk (€)</th>
+              <th style={th}></th>
             </tr>
           </thead>
           <tbody>
@@ -166,6 +198,11 @@ export default function TootajaPage() {
                 <td style={td}>{w.Sissepaas}</td>
                 <td style={td}>{w.Valjapaas}</td>
                 <td style={td}>{w.Palk?.toFixed(2)}</td>
+                <td style={td}>
+                  <button style={btnEdit} onClick={() => updateValjapaas(w.RawKuupaev)}>
+                    Muuda
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -175,6 +212,14 @@ export default function TootajaPage() {
   );
 }
 
+const btnEdit = { 
+  padding: "6px 12px",
+  background: "#2196F3",
+  color: "white",
+  border: "none",
+  borderRadius: "4px",
+  cursor: "pointer"
+};
 const page = { 
     padding: "20px", 
     fontFamily: "Arial, sans-serif", 
